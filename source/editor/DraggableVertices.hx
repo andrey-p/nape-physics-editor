@@ -1,20 +1,21 @@
 package editor;
 
-import flixel.group.FlxGroup;
+import flixel.group.FlxTypedGroup;
 import flixel.FlxSprite;
+import flixel.FlxG;
 
 import nape.shape.Shape;
 import nape.shape.Polygon;
 import nape.geom.Vec2;
 
-class DraggableVertices extends FlxGroup {
+class DraggableVertices extends FlxTypedGroup<DraggableVertex> {
 
     public var dragging:Bool;
 
     private var shape:Polygon;
-    private var squareSize:Int = 4;
 
     function new():Void {
+        dragging = false;
         super();
     }
 
@@ -37,10 +38,28 @@ class DraggableVertices extends FlxGroup {
         // at some point in the future
         shape = s.castPolygon;
 
-        shape.worldVerts.foreach(function (v:Vec2) {
-            var sprite:FlxSprite = new FlxSprite(v.x - squareSize / 2, v.y - squareSize / 2);
-            sprite.makeGraphic(squareSize, squareSize, 0x99ffffff);
+        var offsetX = shape.body.position.x;
+        var offsetY = shape.body.position.y;
+
+        shape.localVerts.foreach(function (v:Vec2) {
+            var sprite:DraggableVertex = new DraggableVertex(v.x + offsetX, v.y + offsetY, v);
             add(sprite);
         });
+    }
+
+    public override function update():Void {
+        super.update();
+
+        if (FlxG.mouse.justPressed) {
+            for (v in members) {
+                if (v.overlapsPoint(FlxG.mouse.getScreenPosition())) {
+                    dragging = true;
+                    v.startDrag();
+                    break;
+                }
+            }
+        } else if (dragging && FlxG.mouse.justReleased) {
+            dragging = false;
+        }
     }
 }
