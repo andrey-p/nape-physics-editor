@@ -113,8 +113,6 @@ class MenuState extends FlxNapeState
 
             if (shapes != null && shapes.length > 0) {
                 vertices.selectShape(shapes.shift());
-            } else {
-                vertices.deselect();
             }
         }
 	}	
