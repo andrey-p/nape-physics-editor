@@ -1,8 +1,11 @@
-package;
+package editor;
 
-import haxe.Json;
+import flixel.addons.nape.FlxNapeSprite;
+import flixel.addons.nape.FlxNapeState;
 
-import nape.phys.Body;
+import iso.BitmapDataIso;
+import iso.IsoBody;
+
 import nape.shape.Shape;
 import nape.shape.ShapeType;
 import nape.shape.Circle;
@@ -25,24 +28,30 @@ typedef ExportBody = {
     shapes:Array<ExportShape>
 };
 
-class Serializer {
-    public function new():Void {}
+class EditorSprite extends FlxNapeSprite {
+    function new(?x:Float, ?y:Float) {
+        super(x, y, null, false);
+    }
 
-    public function serialize(body:Body):String {
-        var export:Dynamic = {};
-        export.bodies = new Array<ExportBody>();
+    public function generateBodyFromSprite():Void {
+        var iso:BitmapDataIso = new BitmapDataIso(pixels);
+        body = IsoBody.run(iso.iso, iso.bounds);
+        body.position.x = x + offset.x;
+        body.position.y = y + offset.y;
+        body.space = FlxNapeState.space;
+    }
 
-        export.materials = "default"; // these can be defined later on
-
-        export.bodies.push({
+    public function export():ExportBody {
+        var export:ExportBody = {
             name: "foo",
-            shapes: new Array<Dynamic>()
-        });
+            shapes: new Array<ExportShape>()
+        };
+
         body.shapes.foreach(function (shape) {
             if (shape.isCircle()) {
                 var circle:Circle = shape.castCircle;
 
-                export.bodies[0].shapes.push({
+                export.shapes.push({
                     type: "circle",
                     position: {
                         x: circle.localCOM.x,
@@ -68,12 +77,10 @@ class Serializer {
                     });
                 });
 
-                export.bodies[0].shapes.push(exportPoly);
+                export.shapes.push(exportPoly);
             }
         });
 
-        var exportJson:String = Json.stringify(export);
-
-        return exportJson;
+        return export;
     }
 }

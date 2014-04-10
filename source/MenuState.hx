@@ -21,8 +21,8 @@ import sys.io.FileInput;
 import sys.io.FileOutput;
 #end
 
-import iso.BitmapDataIso;
-import iso.IsoBody;
+import editor.EditorSprite;
+import haxe.Json;
 
 /**
  * A FlxState which can be used for the game's menu.
@@ -33,8 +33,7 @@ class MenuState extends FlxNapeState
     private var loadBtn:FlxButton;
     private var makeBodyBtn:FlxButton;
     private var exportBtn:FlxButton;
-    private var sprite:FlxNapeSprite;
-    private var serializer:Serializer;
+    private var sprite:EditorSprite;
 	/**
 	 * Function that is called up when to state is created to set it up. 
 	 */
@@ -49,10 +48,7 @@ class MenuState extends FlxNapeState
         loadBtn = new FlxButton(10, FlxG.height - 50, "Load", onLoadClick);
         makeBodyBtn = new FlxButton(100, FlxG.height - 50, "Make body", onMakeBodyClick);
         exportBtn = new FlxButton(200, FlxG.height - 50, "Export", onExport);
-        sprite = new FlxNapeSprite(0, 0, null, false);
-
-        sprite.x = 100;
-        sprite.y = 100;
+        sprite = new EditorSprite(100, 100);
 
         add(text);
         add(loadBtn);
@@ -78,20 +74,13 @@ class MenuState extends FlxNapeState
     }
 
     private function onMakeBodyClick():Void {
-        var iso:BitmapDataIso = new BitmapDataIso(sprite.pixels);
-        var body:Body = IsoBody.run(iso.iso, iso.bounds);
-
-        body.space = FlxNapeState.space;
-        body.position.x = sprite.x + sprite.offset.x;
-        body.position.y = sprite.y + sprite.offset.y;
-        sprite.body = body;
-
+        sprite.generateBodyFromSprite();
         add(exportBtn);
     }
 
     private function onExport():Void {
-        serializer = new Serializer();
-        var json:String = serializer.serialize(sprite.body);
+        var exportedBody:ExportBody = sprite.export();
+        var json:String = Json.stringify(exportedBody);
         
         text.text = "json is: \n\n" + json;
     }
