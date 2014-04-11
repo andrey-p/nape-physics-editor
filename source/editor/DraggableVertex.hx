@@ -11,7 +11,7 @@ class DraggableVertex extends FlxSprite {
     private var predragY:Float;
     private var dragging:Bool;
 
-    private static var SIZE:Int = 4;
+    private static var SIZE:Int = 6;
 
 
     function new(x:Float, y:Float, v:Vec2):Void {
@@ -28,14 +28,22 @@ class DraggableVertex extends FlxSprite {
         predragY = y;
     }
 
+    public function commitDrag():Void {
+        napeVertex.x += x - predragX;
+        napeVertex.y += y - predragY;
+        dragging = false;
+    }
+
+    public function rejectDrag():Void {
+        x = predragX;
+        y = predragY;
+        dragging = false;
+    }
+
     public override function update():Void {
         super.update();
 
-        if (dragging && FlxG.mouse.justReleased) {
-            napeVertex.x += x - predragX;
-            napeVertex.y += y - predragY;
-            dragging = false;
-        } else if (dragging) {
+        if (dragging) {
             x = FlxG.mouse.screenX;
             y = FlxG.mouse.screenY;
         }
