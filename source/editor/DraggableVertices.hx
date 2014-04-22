@@ -2,6 +2,7 @@ package editor;
 
 import flixel.group.FlxTypedGroup;
 import flixel.FlxSprite;
+import flixel.util.FlxPoint;
 import flixel.FlxG;
 
 import nape.geom.GeomPoly;
@@ -15,6 +16,8 @@ class DraggableVertices extends FlxTypedGroup<DraggableVertex> {
 
     private var shape:Polygon;
     private var currentVertex:DraggableVertex;
+    private var lastX:Float;
+    private var lastY:Float;
 
     function new():Void {
         dragging = false;
@@ -66,23 +69,43 @@ class DraggableVertices extends FlxTypedGroup<DraggableVertex> {
     }
 
     public override function update():Void {
-        if (FlxG.mouse.justPressed) {
+        if (shape != null && FlxG.mouse.justPressed) {
+            var pos:FlxPoint = FlxG.mouse.getScreenPosition();
+            // if a point was pressed, set that to drag
             for (v in members) {
-                if (v.overlapsPoint(FlxG.mouse.getScreenPosition())) {
-                    dragging = true;
+                if (v.overlapsPoint(pos)) {
                     currentVertex = v;
                     v.startDrag();
                     break;
                 }
             }
-        } else if (dragging && FlxG.mouse.justReleased) {
-            if (isPolygonValid()) {
-                currentVertex.commitDrag();
-            } else {
-                currentVertex.rejectDrag();
+
+            // otherwise, if the shape was clicked, start to drag
+            if (currentVertex == null && shape.contains(Vec2.weak(pos.x, pos.y))) {
+                lastX = pos.x;
+                lastY = pos.y;
+                dragging = true;
+            }
+        } else if (shape != null && dragging && FlxG.mouse.pressed) {
+            var pos:FlxPoint = FlxG.mouse.getScreenPosition();
+            shape.localCOM.x += pos.x - lastX;
+            shape.localCOM.y += pos.y - lastY;
+            lastX = pos.x;
+            lastY = pos.y;
+        } else if (FlxG.mouse.justReleased) {
+            if (currentVertex != null) {
+                if (isPolygonValid()) {
+                    currentVertex.commitDrag();
+                } else {
+                    currentVertex.rejectDrag();
+                }
+
+                currentVertex = null;
             }
 
-            dragging = false;
+            if (dragging) {
+                dragging = false;
+            }
         }
 
         super.update();
