@@ -10,7 +10,7 @@ import nape.shape.Shape;
 import nape.shape.Polygon;
 import nape.geom.Vec2;
 
-class DraggableVertices extends FlxTypedGroup<DraggableVertex> {
+class PolygonEditor extends FlxTypedGroup<DraggableVertex> {
 
     public var dragging:Bool;
 

@@ -24,7 +24,7 @@ import sys.io.FileOutput;
 #end
 
 import editor.EditorSprite;
-import editor.DraggableVertices;
+import editor.PolygonEditor;
 import haxe.Json;
 
 /**
@@ -37,7 +37,7 @@ class MenuState extends FlxNapeState
     private var makeBodyBtn:FlxButton;
     private var exportBtn:FlxButton;
     private var sprite:EditorSprite;
-    private var vertices:DraggableVertices;
+    private var polygonEditor:PolygonEditor;
 	/**
 	 * Function that is called up when to state is created to set it up. 
 	 */
@@ -53,12 +53,12 @@ class MenuState extends FlxNapeState
         makeBodyBtn = new FlxButton(100, FlxG.height - 50, "Make body", onMakeBodyClick);
         exportBtn = new FlxButton(200, FlxG.height - 50, "Export", onExport);
         sprite = new EditorSprite(100, 100);
-        vertices = new DraggableVertices();
+        polygonEditor = new PolygonEditor();
 
         add(text);
         add(loadBtn);
         add(sprite);
-        add(vertices);
+        add(polygonEditor);
 	}
 
     private function onLoadClick():Void {
@@ -107,12 +107,12 @@ class MenuState extends FlxNapeState
 	{
 		super.update();
 
-        if (FlxG.mouse.justReleased && !vertices.dragging) {
+        if (FlxG.mouse.justReleased && !polygonEditor.dragging) {
             var point:Vec2 = Vec2.weak(FlxG.mouse.screenX, FlxG.mouse.screenY);
             var shapes:ShapeList = FlxNapeState.space.shapesUnderPoint(point);
 
             if (shapes != null && shapes.length > 0) {
-                vertices.selectShape(shapes.shift());
+                polygonEditor.selectShape(shapes.shift());
             }
         }
 	}	
