@@ -9,6 +9,20 @@ import nape.geom.GeomPoly;
 import nape.geom.Vec2;
 import nape.geom.Mat23;
 
+typedef ExportPoint = {
+    x:Float,
+    y:Float
+};
+
+typedef ExportPoly = {
+    ?vertices:Array<ExportPoint>
+};
+
+typedef ExportBody = {
+    name:String,
+    polys:Array<ExportPoly>
+};
+
 class EditorPolygons {
     var polys:GeomPolyList;
     var display:Shape;
@@ -67,5 +81,29 @@ class EditorPolygons {
         } else {
             return null;
         }
+    }
+
+    public function export():ExportBody {
+        var export:ExportBody = {
+            name: "foo",
+            polys: new Array<ExportPoly>()
+        };
+
+        polys.foreach(function (poly) {
+            var exportPoly:ExportPoly = {
+                vertices: new Array<ExportPoint>()
+            };
+
+            for (vert in poly) {
+                exportPoly.vertices.push({
+                    x: vert.x,
+                    y: vert.y
+                });
+            }
+
+            export.polys.push(exportPoly);
+        });
+
+        return export;
     }
 }

@@ -93,7 +93,7 @@ class MenuState extends FlxNapeState
     }
 
     private function onExport():Void {
-        var exportedBody:ExportBody = sprite.export();
+        var exportedBody:ExportBody = editorPolygons.export();
         var json:String = Json.stringify(exportedBody);
         
         text.text = "json is: \n\n" + json;
