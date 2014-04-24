@@ -9,12 +9,13 @@ import nape.geom.GeomPoly;
 import nape.shape.Shape;
 import nape.shape.Polygon;
 import nape.geom.Vec2;
+import nape.geom.Mat23;
 
 class PolygonEditor extends FlxTypedGroup<DraggableVertex> {
 
     public var dragging:Bool;
 
-    private var shape:Polygon;
+    private var currentPoly:GeomPoly;
     private var currentVertex:DraggableVertex;
     private var lastX:Float;
     private var lastY:Float;
@@ -31,45 +32,30 @@ class PolygonEditor extends FlxTypedGroup<DraggableVertex> {
 
         clear();
 
-        shape = null;
+        currentPoly = null;
     }
 
-    public function selectShape(s:Shape):Void {
+    public function selectPoly(poly:GeomPoly):Void {
         deselect();
 
         // I'm sorta assuming everything is a polygon
         // this is clearly a bad idea and needs to be rectified
         // ...
         // at some point in the future
-        shape = s.castPolygon;
+        currentPoly = poly;
 
-        var offsetX = shape.body.position.x;
-        var offsetY = shape.body.position.y;
-
-        shape.localVerts.foreach(function (v:Vec2) {
-            var sprite:DraggableVertex = new DraggableVertex(v.x + offsetX, v.y + offsetY, v);
+        for (v in currentPoly) {
+            var sprite:DraggableVertex = new DraggableVertex(v.x, v.y, v);
             add(sprite);
-        });
+        }
     }
 
     private function isPolygonValid():Bool {
-        // piggyback on nape's own polygon validation logic
-        var vectors = new Array<Vec2>();
-
-        for (v in members) {
-            vectors.push(Vec2.weak(v.x, v.y));
-        }
-
-        var poly = GeomPoly.get(vectors);
-        var isValid:Bool = poly.isSimple() && poly.isConvex();
-
-        poly.dispose();
-
-        return isValid;
+        return currentPoly.isSimple() && currentPoly.isConvex();
     }
 
     public override function update():Void {
-        if (shape != null && FlxG.mouse.justPressed) {
+        if (currentPoly != null && FlxG.mouse.justPressed) {
             var pos:FlxPoint = FlxG.mouse.getScreenPosition();
             // if a point was pressed, set that to drag
             for (v in members) {
@@ -81,23 +67,24 @@ class PolygonEditor extends FlxTypedGroup<DraggableVertex> {
             }
 
             // otherwise, if the shape was clicked, start to drag
-            if (currentVertex == null && shape.contains(Vec2.weak(pos.x, pos.y))) {
+            if (currentVertex == null && currentPoly.contains(Vec2.weak(pos.x, pos.y))) {
                 lastX = pos.x;
                 lastY = pos.y;
                 dragging = true;
             }
-        } else if (shape != null && dragging && FlxG.mouse.pressed) {
+        } else if (currentPoly != null && dragging && FlxG.mouse.pressed) {
             var pos:FlxPoint = FlxG.mouse.getScreenPosition();
-            shape.localCOM.x += pos.x - lastX;
-            shape.localCOM.y += pos.y - lastY;
+            var matrix:Mat23 = Mat23.translation(pos.x - lastX, pos.y - lastY);
+            currentPoly.transform(matrix);
+
             lastX = pos.x;
             lastY = pos.y;
         } else if (FlxG.mouse.justReleased) {
             if (currentVertex != null) {
-                if (isPolygonValid()) {
-                    currentVertex.commitDrag();
-                } else {
-                    currentVertex.rejectDrag();
+                currentVertex.commitDrag();
+
+                if (!isPolygonValid()) {
+                    currentVertex.revertDrag();
                 }
 
                 currentVertex = null;

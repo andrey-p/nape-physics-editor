@@ -10,6 +10,9 @@ import nape.shape.Shape;
 import nape.shape.ShapeType;
 import nape.shape.Circle;
 import nape.shape.Polygon;
+import nape.geom.MarchingSquares;
+import nape.geom.GeomPolyList;
+import nape.geom.Vec2;
 
 typedef ExportPoint = {
     x:Float,
@@ -33,12 +36,20 @@ class EditorSprite extends FlxNapeSprite {
         super(x, y, null, false);
     }
 
-    public function generateBodyFromSprite():Void {
+    public function generatePolys():GeomPolyList {
         var iso:BitmapDataIso = new BitmapDataIso(pixels);
-        body = IsoBody.run(iso.iso, iso.bounds);
-        body.position.x = x + offset.x;
-        body.position.y = y + offset.y;
-        body.space = FlxNapeState.space;
+        var granularity:Vec2 = Vec2.weak(8, 8);
+        var quality:Int = 2;
+        var simplification:Float = 2;
+
+        var originalPolys = MarchingSquares.run(iso.iso, iso.bounds, Vec2.weak(8, 8), 2);
+        var polys:GeomPolyList = new GeomPolyList();
+
+        for (p in originalPolys) {
+            p.simplify(simplification).convexDecomposition(true, polys);
+        }
+        
+        return polys;
     }
 
     public function export():ExportBody {

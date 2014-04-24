@@ -34,10 +34,11 @@ class DraggableVertex extends FlxSprite {
         dragging = false;
     }
 
-    public function rejectDrag():Void {
+    public function revertDrag():Void {
+        napeVertex.x -= x - predragX;
+        napeVertex.y -= y - predragY;
         x = predragX;
         y = predragY;
-        dragging = false;
     }
 
     public override function update():Void {
@@ -46,6 +47,9 @@ class DraggableVertex extends FlxSprite {
         if (dragging) {
             x = FlxG.mouse.screenX;
             y = FlxG.mouse.screenY;
+        } else {
+            x = napeVertex.x - origin.x;
+            y = napeVertex.y - origin.y;
         }
     }
 

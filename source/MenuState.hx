@@ -14,6 +14,8 @@ import flixel.addons.nape.FlxNapeSprite;
 import nape.phys.Body;
 import nape.shape.ShapeList;
 import nape.geom.Vec2;
+import nape.geom.GeomPoly;
+import nape.geom.GeomPolyList;
 
 #if sys
 import systools.Dialogs;
@@ -25,6 +27,7 @@ import sys.io.FileOutput;
 
 import editor.EditorSprite;
 import editor.PolygonEditor;
+import editor.EditorPolygons;
 import haxe.Json;
 
 /**
@@ -38,6 +41,7 @@ class MenuState extends FlxNapeState
     private var exportBtn:FlxButton;
     private var sprite:EditorSprite;
     private var polygonEditor:PolygonEditor;
+    private var editorPolygons:EditorPolygons;
 	/**
 	 * Function that is called up when to state is created to set it up. 
 	 */
@@ -54,6 +58,7 @@ class MenuState extends FlxNapeState
         exportBtn = new FlxButton(200, FlxG.height - 50, "Export", onExport);
         sprite = new EditorSprite(100, 100);
         polygonEditor = new PolygonEditor();
+        editorPolygons = new EditorPolygons();
 
         add(text);
         add(loadBtn);
@@ -80,7 +85,10 @@ class MenuState extends FlxNapeState
     }
 
     private function onMakeBodyClick():Void {
-        sprite.generateBodyFromSprite();
+        var polys:GeomPolyList = sprite.generatePolys();
+        editorPolygons.setPolys(polys);
+        editorPolygons.setOffset(sprite.x, sprite.y);
+
         add(exportBtn);
     }
 
@@ -106,13 +114,14 @@ class MenuState extends FlxNapeState
 	override public function update():Void
 	{
 		super.update();
+        editorPolygons.update();
 
         if (FlxG.mouse.justReleased && !polygonEditor.dragging) {
-            var point:Vec2 = Vec2.weak(FlxG.mouse.screenX, FlxG.mouse.screenY);
-            var shapes:ShapeList = FlxNapeState.space.shapesUnderPoint(point);
+            var point:Vec2 = Vec2.get(FlxG.mouse.screenX, FlxG.mouse.screenY);
+            var poly:GeomPoly = editorPolygons.getPolyAtPoint(point);
 
-            if (shapes != null && shapes.length > 0) {
-                polygonEditor.selectShape(shapes.shift());
+            if (poly != null) {
+                polygonEditor.selectPoly(poly);
             }
         }
 	}	
